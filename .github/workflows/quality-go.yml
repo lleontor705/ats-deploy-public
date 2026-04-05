@@ -15,6 +15,9 @@ on:
       test-tags:
         type: string
         default: ""
+      test-timeout:
+        type: string
+        default: "10m"
 
 jobs:
   lint:
@@ -41,7 +44,7 @@ jobs:
           FLAGS="-count=1 -coverprofile=coverage.out"
           if [ "${{ inputs.enable-race }}" = "true" ]; then FLAGS="$FLAGS -race"; fi
           if [ -n "${{ inputs.test-tags }}" ]; then FLAGS="$FLAGS -tags ${{ inputs.test-tags }}"; fi
-          go test $FLAGS ./...
+          go test -timeout ${{ inputs.test-timeout }} $FLAGS ./...
       - uses: actions/upload-artifact@v4
         if: always()
         with:
