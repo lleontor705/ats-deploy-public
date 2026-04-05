@@ -1,0 +1,59 @@
+name: "Quality Gate: Node.js"
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: "22"
+      package-manager:
+        type: string
+        default: "npm"
+      working-directory:
+        type: string
+        default: "."
+      lint-command:
+        type: string
+        default: "npm run lint"
+      typecheck-command:
+        type: string
+        default: "npx tsc --noEmit"
+      test-command:
+        type: string
+        default: "npm test"
+      enable-typecheck:
+        type: boolean
+        default: true
+      enable-tests:
+        type: boolean
+        default: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Setup pnpm
+        if: inputs.package-manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+      - name: Install
+        run: |
+          case "${{ inputs.package-manager }}" in
+            pnpm) pnpm install --frozen-lockfile || pnpm install ;;
+            yarn) yarn install --frozen-lockfile ;;
+            *) npm ci ;;
+          esac
+      - name: Lint
+        run: ${{ inputs.lint-command }}
+      - name: Typecheck
+        if: inputs.enable-typecheck
+        run: ${{ inputs.typecheck-command }}
+      - name: Test
+        if: inputs.enable-tests
+        run: ${{ inputs.test-command }}

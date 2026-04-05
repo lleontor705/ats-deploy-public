@@ -1,0 +1,30 @@
+name: "Quality Gate: .NET"
+
+on:
+  workflow_call:
+    inputs:
+      dotnet-version:
+        type: string
+        default: "10.0.x"
+      solution-file:
+        type: string
+        required: true
+      test-project:
+        type: string
+        default: ""
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+      - run: dotnet restore ${{ inputs.solution-file }}
+      - run: dotnet build ${{ inputs.solution-file }} --no-restore
+      - name: Test
+        run: |
+          TARGET="${{ inputs.test-project }}"
+          if [ -z "$TARGET" ]; then TARGET="${{ inputs.solution-file }}"; fi
+          dotnet test "$TARGET" --no-build --verbosity normal
