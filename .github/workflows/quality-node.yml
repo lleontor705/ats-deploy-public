@@ -27,6 +27,9 @@ on:
       enable-tests:
         type: boolean
         default: true
+      pnpm-version:
+        type: string
+        default: ""
 
 jobs:
   quality:
@@ -42,11 +45,17 @@ jobs:
       - name: Setup pnpm
         if: inputs.package-manager == 'pnpm'
         uses: pnpm/action-setup@v4
+        with:
+          version: ${{ inputs.pnpm-version || null }}
+      - name: Setup Bun
+        if: inputs.package-manager == 'bun'
+        uses: oven-sh/setup-bun@v2
       - name: Install
         run: |
           case "${{ inputs.package-manager }}" in
             pnpm) pnpm install --frozen-lockfile || pnpm install ;;
             yarn) yarn install --frozen-lockfile ;;
+            bun) bun install --frozen-lockfile || bun install ;;
             *) npm ci ;;
           esac
       - name: Lint
